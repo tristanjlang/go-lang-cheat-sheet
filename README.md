@@ -586,6 +586,43 @@ func doStuff(channelOut, channelIn chan int) {
 }
 ```
 
+### Channel Example
+* The following example works as follows:
+	1. The fibonacci function sends value `x` to channel `c`
+	2. The anonymous goroutine reads from channel `c` and prints the output
+	3. `x` and `y` are updated after `x` is sent to channel `c`
+	4. Why is `x` not continually sent to channel `c`, since it is in the (seemingly infinite) `for` loop?
+```
+package main
+
+import "fmt"
+
+func fibonacci(c, quit chan int) {
+	x, y := 0, 1
+	for {
+		select {
+		case c <- x:
+			x, y = y, x+y
+		case <-quit:
+			fmt.Println("quit")
+			return
+		}
+	}
+}
+
+func main() {
+	c := make(chan int)
+	quit := make(chan int)
+	go func() {
+		for i := 0; i < 10; i++ {
+			fmt.Println(<-c)
+		}
+		quit <- 0
+	}()
+	fibonacci(c, quit)
+}
+```
+
 ### Channel Axioms
 - A send to a nil channel blocks forever
 
